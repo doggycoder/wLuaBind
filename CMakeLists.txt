@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.13)
+project(wLuaBind)
+add_subdirectory(lua-5.3.5 lua.out)
+set(CMAKE_CXX_STANDARD 11)
+include_directories(lua-5.3.5/src)
+add_executable(${PROJECT_NAME} main.cpp)
+target_link_libraries(${PROJECT_NAME} lua)
