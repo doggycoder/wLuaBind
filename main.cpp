@@ -34,6 +34,8 @@ int main() {
     auto ret2 = state->call<char *>("sayHelloToWorld");
     TupleTraversal<decltype(ret2)>::traversal(ret2);
 
+    state->call0("sayHelloInLua");
+
     delete state;
     return 0;
 }

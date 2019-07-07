@@ -41,6 +41,7 @@ void testCCallLua(){
     lua_pushnumber(l, 5);
     lua_call(l, 2, 1);
     double iResult = lua_tonumber(l, -1);
+    lua_pop(l,1);
     std::cout<<"result:" << iResult << std::endl;
     lua_close(l);
 }
@@ -95,7 +96,7 @@ public:
 static int LuaCreateOperateCpp(lua_State * l){
     auto ** pData = (OperateCpp**)lua_newuserdata(l, sizeof(OperateCpp*));
     *pData = new OperateCpp();
-    luaL_getmetatable(l, "OperateCpp");
+    luaL_getmetatable(l, "OperateCppMeta");
     lua_setmetatable(l, -2);
     return 1;
 }
@@ -132,14 +133,13 @@ void testLuaCallCpp(){
     luaL_openlibs(l);
     lua_pushcfunction(l,LuaCreateOperateCpp);
     lua_setglobal(l,"OperateCpp");
-    luaL_newmetatable(l, "OperateCpp");
+    luaL_newmetatable(l, "OperateCppMeta");
     lua_pushstring(l,"__gc");
     lua_pushcfunction(l,LuaDestroyOperateCpp);
     lua_settable(l, -3);
     lua_pushstring(l, "__index");
     lua_pushcfunction(l,LuaCallIndex);
     lua_settable(l,-3);
-    lua_pop(l,1);
 
     std::string content = loadString("../res/test2.lua");
     int ret = luaL_dostring(l,content.c_str());

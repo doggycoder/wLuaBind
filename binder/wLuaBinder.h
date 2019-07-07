@@ -61,6 +61,9 @@ namespace wLua {
         template <typename ... Args,typename ... Params>
         std::tuple<Args...> call(std::string name,Params ... p);
 
+        template <typename ... Params>
+        void call0(std::string name,Params ... p);
+
     };
 
 };

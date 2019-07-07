@@ -19,3 +19,7 @@ function sayHelloToWorld()
 
     return "Hello Wolrd!"
 end
+
+function sayHelloInLua()
+    print("Hello World, I'm Lua!")
+end

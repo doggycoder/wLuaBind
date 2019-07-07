@@ -96,4 +96,11 @@ namespace wLua{
         return luaRet;
     }
 
+    template <typename ... Params>
+    void State::call0(std::string name,Params ... p){
+        int ret = lua_getglobal(l, name.c_str());
+        push(p...);
+        lua_call(l, sizeof...(Params), 0);
+    }
+
 }
