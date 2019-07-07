@@ -86,21 +86,14 @@ namespace wLua{
     }
 
     template <typename ... Args,typename ... Params>
-    std::tuple<Args...> State::call(std::string name,Params ... p){
+    std::tuple<int,Args...> State::call(std::string name,Params ... p){
         int ret = lua_getglobal(l, name.c_str());
         push(p...);
         int retSize = sizeof...(Args);
         lua_call(l, sizeof...(Params), retSize);
-        std::tuple<Args...> luaRet;
-        TupleTraversal<std::tuple<Args...>>::traversal(luaRet,this);
+        std::tuple<int,Args...> luaRet;
+        TupleTraversal<std::tuple<int,Args...>>::traversal(luaRet, this, ret);
         return luaRet;
-    }
-
-    template <typename ... Params>
-    void State::call0(std::string name,Params ... p){
-        int ret = lua_getglobal(l, name.c_str());
-        push(p...);
-        lua_call(l, sizeof...(Params), 0);
     }
 
 }

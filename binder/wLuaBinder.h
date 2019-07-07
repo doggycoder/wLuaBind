@@ -59,10 +59,7 @@ namespace wLua {
         int dofile(std::string path);
 
         template <typename ... Args,typename ... Params>
-        std::tuple<Args...> call(std::string name,Params ... p);
-
-        template <typename ... Params>
-        void call0(std::string name,Params ... p);
+        std::tuple<int,Args...> call(std::string name,Params ... p);
 
     };
 
