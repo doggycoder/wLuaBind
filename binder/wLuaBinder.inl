@@ -47,6 +47,7 @@ namespace wLua{
 
     template <typename T>
     T State::pop(){
+        //优化效率，可以按照堆栈中的顺序获取指定索引的数据，最后统一pop
         const std::type_info& tid = typeid(T);
         if(tid == typeid(bool)){
             int r = lua_toboolean(l,-1);
