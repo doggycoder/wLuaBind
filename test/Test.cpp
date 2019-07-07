@@ -33,6 +33,7 @@ void testCCallLua(){
     luaL_openlibs(l);
     std::string content = loadString("../res/test1.lua");
     ret = luaL_dostring(l,content.c_str());
+//    ret = luaL_dofile(l, "../res/test1.lua");
     std::cout<<"doFile : "<< ret<< std::endl;
     ret = lua_getglobal(l, "helloAdd");
     std::cout<<"getFunction : "<< ret<< std::endl;

@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
 project(wLuaBind)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/output)
-add_subdirectory(lua-5.3.5 lua.out)
 set(CMAKE_CXX_STANDARD 11)
+
+add_subdirectory(binder luabinder.out)
 include_directories(lua-5.3.5/src)
 aux_source_directory(. SRC_MAIN)
 aux_source_directory(./test SRC_TEST)

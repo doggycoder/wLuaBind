@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.5)
+project(lua)
+set(CMAKE_CXX_STANDARD 11)
+aux_source_directory(../lua-5.3.5/src SRC_LUA)
+include_directories(../lua-5.3.5/src)
+aux_source_directory(. SRC_BINDER)
+message(LuaSource : ${SRC_LUA})
+add_library(${PROJECT_NAME} STATIC ${SRC_BINDER} ${SRC_LUA})
