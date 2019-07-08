@@ -131,7 +131,14 @@ void testLuaCallCpp(){
     std::cout << "start test Lua Call Cpp --------------------- " << std::endl;
     lua_State * l = luaL_newstate();
     luaL_openlibs(l);
-    lua_pushcfunction(l,LuaCreateOperateCpp);
+//    lua_pushcfunction(l,LuaCreateOperateCpp);
+    lua_pushcfunction(l,[](lua_State * l) -> int{
+        auto ** pData = (OperateCpp**)lua_newuserdata(l, sizeof(OperateCpp*));
+        *pData = new OperateCpp();
+        luaL_getmetatable(l, "OperateCppMeta");
+        lua_setmetatable(l, -2);
+        return 1;
+    });
     lua_setglobal(l,"OperateCpp");
     luaL_newmetatable(l, "OperateCppMeta");
     lua_pushstring(l,"__gc");

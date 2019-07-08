@@ -22,21 +22,32 @@ public:
     }
 };
 
+void testParam(int i,int b,char * c,int g){}
+
+class TestParam{
+public:
+    void testParam(int i,int b,char * c){};
+};
+
 int main() {
 //    testCCallLua();
 //    testLuaCallC();
-//    testLuaCallCpp();
-    wLua::State * state = wLua::State::create();
-    state->dofile("../res/test3.lua");
-    auto ret = state->call<char *,int,char*,bool>("sayHello","LiMing", 21, true, 10);
-    TupleTraversal<decltype(ret)>::traversal(ret);
+    testLuaCallCpp();
+//    wLua::State * state = wLua::State::create();
+//    state->dofile("../res/test3.lua");
+//    auto ret = state->call<char *,int,char*,bool>("sayHello","LiMing", 21, true, 10);
+//    TupleTraversal<decltype(ret)>::traversal(ret);
+//
+//    auto ret2 = state->call<char *>("sayHelloToWorld");
+//    TupleTraversal<decltype(ret2)>::traversal(ret2);
+//
+//    auto ret3 = state->call("sayHelloInLua");
+//    TupleTraversal<decltype(ret3)>::traversal(ret3);
+//
+//    delete state;
 
-    auto ret2 = state->call<char *>("sayHelloToWorld");
-    TupleTraversal<decltype(ret2)>::traversal(ret2);
-
-    auto ret3 = state->call("sayHelloInLua");
-    TupleTraversal<decltype(ret3)>::traversal(ret3);
-
-    delete state;
+    // 如何支持类的成员函数获取参数
+    std::cout <<"func param size:" <<wLua::get(&TestParam::testParam) <<std::endl;
+    std::cout <<"func param size:" <<wLua::get(testParam) <<std::endl;
     return 0;
 }

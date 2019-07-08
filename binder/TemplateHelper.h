@@ -33,4 +33,24 @@ namespace wLua{
         }
     };
 
+    template<typename Sig>
+    struct get_{
+//        static size_t const value = 0;
+    };
+
+    template<typename R,typename... Args>
+    struct get_<R(*)(Args...)> {
+        static size_t const value = sizeof...(Args);
+    };
+
+    template<typename Clazz,typename R,typename... Args>
+    struct get_<R(Clazz::*)(Args...)> {
+        static size_t const value = sizeof...(Args);
+    };
+
+    template<typename Sig>
+    inline size_t get(Sig) {
+        return get_<Sig>::value;
+    }
+
 }
