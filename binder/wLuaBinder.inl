@@ -45,17 +45,20 @@ namespace wLua{
         push(p...);
     }
 
-    template <typename T>
-    T State::pop(){
+    template <typename T, typename Tuple>
+    T State::pop(Tuple &tp, size_t pos, void * data){
         //优化效率，可以按照堆栈中的顺序获取指定索引的数据，最后统一pop
+        auto * l = (lua_State *)data;
         const std::type_info& tid = typeid(T);
         if(tid == typeid(bool)){
             int r = lua_toboolean(l,-1);
             lua_pop(l,1);
+            std::cout<<"pop bool:" << r <<std::endl;
             auto ans = static_cast<T*>(static_cast<void *>(&r));
             return *ans;
         }else if(tid == typeid(double) || tid == typeid(float)){
             lua_Number r = lua_tonumber(l,-1);
+            lua_pop(l, 1);
             auto ans = static_cast<T*>(static_cast<void *>(&r));
             return *ans;
         }else if(tid == typeid(int)
@@ -69,7 +72,6 @@ namespace wLua{
             lua_Integer r = lua_tointeger(l,-1);
             lua_pop(l,1);
             auto ans = static_cast<T*>(static_cast<void *>(&r));
-            std::cout<<"pop int:" << r <<std::endl;
             return *ans;
         }else if(tid == typeid(std::string)){
             const char * r = lua_tostring(l,-1);
@@ -80,7 +82,6 @@ namespace wLua{
             const char * r = lua_tostring(l,-1);
             lua_pop(l,1);
             auto ans = static_cast<T*>(static_cast<void *>(&r));
-            std::cout<<"pop string:" << r <<std::endl;
             return *ans;
         }
         return 0;
@@ -93,8 +94,37 @@ namespace wLua{
         int retSize = sizeof...(Args);
         lua_call(l, sizeof...(Params), retSize);
         std::tuple<int,Args...> luaRet;
-        TupleTraversal<std::tuple<int,Args...>>::traversal(luaRet, this, ret);
+        TupleTraversal<std::tuple<int,Args...>>::traversal(luaRet, ret, l);
         return luaRet;
     }
 
+    template <typename Clazz,typename ... Params>
+    void State::register_class(const char *name) {
+        lua_pushcfunction(l,[](lua_State * l) -> int{
+            //先把参数取出来，后面的操作会导致堆栈变化
+            std::tuple<Params...> luaRet;
+            TupleTraversal<std::tuple<Params...>>::traversal(luaRet, l);
+            auto ** pData = (Clazz**)lua_newuserdata(l, sizeof(Clazz*));
+            *pData = createClazzWithTuple<Clazz>(luaRet);
+            luaL_getmetatable(l,  typeid(Clazz).name());
+            //此时new出来的userdata索引为-1，metatable索引为-2
+            //这里就是把-1的metatable设置给-2位置的userdata
+            lua_setmetatable(l, -2);
+            return 1;
+        });
+        lua_setglobal(l,name);
+        luaL_newmetatable(l, typeid(Clazz).name());
+        lua_pushstring(l,"__gc");
+        lua_pushcfunction(l,[](lua_State * l)-> int{
+            std::cout << "Gc Called" << std::endl;
+            delete *(Clazz**)lua_topointer(l, 1);
+            return 0;
+        });
+        lua_settable(l, -3);
+        lua_pushstring(l, "__index");
+        lua_pushcfunction(l,[](lua_State * l)-> int{
+            return 0;
+        });
+        lua_settable(l,-3);
+    }
 }

@@ -5,6 +5,10 @@
 #include "wLuaBinder.h"
 #include "lua.hpp"
 
+/***
+ * 需要格外注意栈的顺序：
+ * 返回值和函数调用都是从左到右依次入栈的，所以出栈的时候，从栈顶pop，则需要注意，先出栈的是右边的参数/返回值。
+ * */
 namespace wLua{
 
     State* State::create(wLua::LuaLib type) {

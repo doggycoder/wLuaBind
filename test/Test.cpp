@@ -8,6 +8,7 @@
 #include <cstring>
 #include "Test.h"
 
+
 /**---------------------------------------------------------------*/
 /// 辅助类函数
 std::string loadString(const std::string &path) {
@@ -82,10 +83,15 @@ private:
 public:
 
     int errorCode = -1;
+    char * c;
 
-    OperateCpp() = default;
+    OperateCpp(int index, char * c) {
+        this->c = c;
+
+        std::cout<<"OperateCpp :"<< index << c <<std::endl;
+    };
     ~OperateCpp(){
-        std::cout<<"OperateCpp destroy"<<std::endl;
+        std::cout<<"OperateCpp destroy:" << c <<std::endl;
     }
 
     double multiply(double x, double y){
@@ -95,7 +101,7 @@ public:
 
 static int LuaCreateOperateCpp(lua_State * l){
     auto ** pData = (OperateCpp**)lua_newuserdata(l, sizeof(OperateCpp*));
-    *pData = new OperateCpp();
+    *pData = new OperateCpp(1,"");
     luaL_getmetatable(l, "OperateCppMeta");
     lua_setmetatable(l, -2);
     return 1;
@@ -134,7 +140,9 @@ void testLuaCallCpp(){
 //    lua_pushcfunction(l,LuaCreateOperateCpp);
     lua_pushcfunction(l,[](lua_State * l) -> int{
         auto ** pData = (OperateCpp**)lua_newuserdata(l, sizeof(OperateCpp*));
-        *pData = new OperateCpp();
+        auto i = lua_tonumber(l, 1);
+        auto j = lua_tostring(l, 2);
+        *pData = new OperateCpp(static_cast<int>(i), (char * )j);
         luaL_getmetatable(l, "OperateCppMeta");
         lua_setmetatable(l, -2);
         return 1;
@@ -153,6 +161,4 @@ void testLuaCallCpp(){
     std::cout<<"doFile:" << ret << std::endl;
     lua_close(l);
 }
-
-
 

@@ -41,11 +41,41 @@ namespace wLua {
         //参数为0的情况
         void push(){};
 
-        template <typename T>
-        T pop();
+        template <typename T, typename Tuple>
+        static T pop(Tuple &tp, size_t pos, void * l);
 
-        template <typename Tuple,size_t N>
-        friend class TupleTraversal;
+
+        //Tuple遍历赋值处理
+        template <typename Tuple,size_t N = std::tuple_size<Tuple>::value>
+        class TupleTraversal{
+        public:
+            static void traversal(Tuple& tuple,int ret,void * data){
+                using type = typename std::tuple_element<N - 1, Tuple>::type;
+                std::get<N-1>(tuple) = State::pop<type>(tuple, N-1, data);
+                TupleTraversal<Tuple, N - 1>::traversal(tuple, ret, data);
+            }
+
+            static void traversal(Tuple& tuple,void * data){
+                using type = typename std::tuple_element<N - 1, Tuple>::type;
+                std::get<N-1>(tuple) =  State::pop<type>(tuple, N-1, data);
+                TupleTraversal<Tuple , N - 1>::traversal(tuple, data);
+            }
+        };
+
+        template <typename Tuple>
+        class TupleTraversal<Tuple, 1>{
+        public:
+            static void traversal(Tuple& tuple,int ret,void * data){
+                using type = typename std::tuple_element<0, Tuple>::type;
+                std::get<0>(tuple) = ret;
+            }
+
+            static void traversal(Tuple& tuple,void * data){
+                using type = typename std::tuple_element<0, Tuple>::type;
+                std::get<0>(tuple) = State::pop<type>(tuple, 0, data);
+            }
+        };
+
 
     public:
         static State * create(LuaLib type = eLL_all);
@@ -60,6 +90,9 @@ namespace wLua {
 
         template <typename ... Args,typename ... Params>
         std::tuple<int,Args...> call(std::string name,Params ... p);
+
+        template <typename Clazz,typename ... Params>
+        void register_class(const char * name = nullptr);
 
     };
 
