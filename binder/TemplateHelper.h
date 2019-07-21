@@ -27,15 +27,16 @@ namespace wLua{
     template<typename Clazz,typename R,typename... Args>
     struct get_<R(Clazz::*)(Args...)> {
         static size_t const value = sizeof...(Args);
-        typedef R(*func)(Args...);
+        using Func = R(Clazz::*)(Args...);
         typedef R retType;
+        using T = Clazz;
+        using ParamTp = std::tuple<Args...>;
     };
 
     template<typename Sig>
     inline size_t getParamSize(Sig) {
         return get_<Sig>::value;
     }
-
 
     //Num 为tuple参数个数时，Tuple的Index为0，Num推导到0的时候，Tuple的Index为0,1,...Num-1
     //最后有个Num = 0的偏特化，Index就是0,1,...Num-1。后面要使用的就是这个Index
@@ -67,6 +68,17 @@ namespace wLua{
     template<typename Tuple,typename Func>
     typename get_<Func>::retType callFuncWithTupleParam(Tuple tp, Func func){
         return __callFuncWithTupleParam(tp,typename Indexes<std::tuple_size<Tuple>::value>::__type(),func);
+    }
+
+    template<typename Tuple,typename Func, typename Clazz ,size_t... _Ind>
+    typename get_<Func>::retType __callFuncWithTupleParam(Tuple tp,IndexTuple< _Ind... >,Func func, Clazz *clazz)
+    {
+        return (clazz->*func)(std::get< _Ind >(tp)...);
+    }
+
+    template<typename Tuple,typename Func,typename Clazz>
+    typename get_<Func>::retType callFuncWithTupleParam(Tuple tp, Clazz *clazz, Func func){
+        return __callFuncWithTupleParam(tp,typename Indexes<std::tuple_size<Tuple>::value>::__type(), func, clazz);
     }
 
     template<typename Clazz, typename Tuple, size_t... _Ind>

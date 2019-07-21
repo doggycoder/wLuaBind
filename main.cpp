@@ -3,6 +3,7 @@
 #include <iostream>
 #include "binder/wLuaBinder.h"
 #include "binder/TemplateHelper.h"
+#include <memory>
 
 using namespace wLua;
 
@@ -27,13 +28,32 @@ public:
 
 
 class TestParam{
+private:
+    std::string name;
 public:
     TestParam(const char * hello, int pos){
         std::cout<<hello<<":" << pos <<std::endl;
     };
-    TestParam(double key){
-        std::cout<<"create testParam : " << key <<std::endl;
-    };
+//    TestParam(double key){
+//        std::cout<<"create testParam : " << key <<std::endl;
+//    };
+
+    int add(int i1, int i2){
+        return i1+ i2;
+    }
+
+    std::string sayHello(){
+        return "Hello, "+ name +" , I am C++";
+    }
+
+    void changeName(const char * name){
+        this->name = name;
+    }
+
+    void changeNameByStr(std::string name){
+        this->name = std::move(name);
+    }
+
     ~TestParam(){
         std::cout<<"TestParam Gc"<<std::endl;
     }
@@ -90,8 +110,14 @@ int main() {
 //    auto ret = state->call<char *,int,char*,bool>("sayHello","LiMing", 21, true, 10);
 //    LogTuple<decltype(ret)>::traversal(ret);
     state->register_class<TestParam,const char *, int>("TestParam");
+    state->register_func(&TestParam::add,"add");
+    state->register_func(&TestParam::changeName,"changeName");
+    state->register_func(&TestParam::changeNameByStr,"changeNameByStr");
+    state->register_func(&TestParam::sayHello,"sayHello");
     state->dofile("../res/test4.lua");
+
     delete state;
+
 
     return 0;
 }

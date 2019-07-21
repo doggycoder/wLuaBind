@@ -11,6 +11,8 @@
  * */
 namespace wLua{
 
+    const char * State::STATE_KEY = "__wLuaBinder__State__";
+
     State* State::create(wLua::LuaLib type) {
         return new State(type);
     }
@@ -36,11 +38,22 @@ namespace wLua{
             chk(eLL_debug, luaopen_debug);
             chk(eLL_utf8, luaopen_utf8);
         }
+        auto ** pData = (State**)lua_newuserdata(l, sizeof(State*));
+        *pData = this;
+        lua_setglobal(l,STATE_KEY);
+        lua_pop(l,1);
     }
 
     State::~State() {
         lua_close(l);
         l = nullptr;
+    }
+
+    void State::check(const char *name) {
+        auto dt = clazzes.find(name);
+        if (dt == clazzes.end()){
+            clazzes[name] = RegClazz();
+        }
     }
 
     int State::dostring(std::string &lua) {
@@ -61,7 +74,8 @@ namespace wLua{
 
 
 
-    template<> void State::push(char* &t){
+    template<>
+    void State::push(char* &t){
         lua_pushstring(l,t);
     }
 

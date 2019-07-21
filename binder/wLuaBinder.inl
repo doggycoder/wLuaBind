@@ -5,12 +5,56 @@
 #pragma once
 
 #include <iostream>
-#include "lua.hpp"
 #include <typeinfo>
 #include <cstring>
 #include "TemplateHelper.h"
 
 namespace wLua{
+
+    template <typename T, typename Tuple>
+    T LuaPop<T,Tuple>::pop(Tuple &tp, size_t pos, void * data){
+        //优化效率，可以按照堆栈中的顺序获取指定索引的数据，最后统一pop
+        auto * l = (lua_State *)data;
+        const std::type_info& tid = typeid(T);
+        if(tid == typeid(bool)){
+            int r = lua_toboolean(l,-1);
+            lua_pop(l,1);
+            std::cout<<"pop bool:" << r <<std::endl;
+            auto ans = static_cast<T*>(static_cast<void *>(&r));
+            return *ans;
+        }else if(tid == typeid(double) || tid == typeid(float)){
+            lua_Number r = lua_tonumber(l,-1);
+            lua_pop(l, 1);
+            auto ans = static_cast<T*>(static_cast<void *>(&r));
+            return *ans;
+        }else if(tid == typeid(int)
+                 || tid == typeid(long)
+                 || tid == typeid(long long)
+                 || tid == typeid(unsigned int)
+                 || tid == typeid(unsigned long)
+                 || tid == typeid(unsigned long long)
+                 || tid == typeid(short)
+                 || tid == typeid(unsigned short)){
+            lua_Integer r = lua_tointeger(l,-1);
+            lua_pop(l,1);
+            auto ans = static_cast<T*>(static_cast<void *>(&r));
+            return *ans;
+        }else if(tid == typeid(char *) || tid == typeid(const char *)){
+            const char * r = lua_tostring(l,-1);
+            lua_pop(l,1);
+            auto ans = static_cast<T*>(static_cast<void *>(&r));
+            return *ans;
+        }
+        return 0;
+    }
+
+    template <typename Tuple>
+    std::string LuaPop<std::string,Tuple>::pop(Tuple &tp, size_t pos, void * data){
+        auto * l = (lua_State *)data;
+        const char * r = lua_tostring(l,-1);
+        lua_pop(l,1);
+        return r;
+    }
 
     template <typename T>
     void State::push(T& t){
@@ -45,47 +89,6 @@ namespace wLua{
         push(p...);
     }
 
-    template <typename T, typename Tuple>
-    T State::pop(Tuple &tp, size_t pos, void * data){
-        //优化效率，可以按照堆栈中的顺序获取指定索引的数据，最后统一pop
-        auto * l = (lua_State *)data;
-        const std::type_info& tid = typeid(T);
-        if(tid == typeid(bool)){
-            int r = lua_toboolean(l,-1);
-            lua_pop(l,1);
-            std::cout<<"pop bool:" << r <<std::endl;
-            auto ans = static_cast<T*>(static_cast<void *>(&r));
-            return *ans;
-        }else if(tid == typeid(double) || tid == typeid(float)){
-            lua_Number r = lua_tonumber(l,-1);
-            lua_pop(l, 1);
-            auto ans = static_cast<T*>(static_cast<void *>(&r));
-            return *ans;
-        }else if(tid == typeid(int)
-                 || tid == typeid(long)
-                 || tid == typeid(long long)
-                 || tid == typeid(unsigned int)
-                 || tid == typeid(unsigned long)
-                 || tid == typeid(unsigned long long)
-                 || tid == typeid(short)
-                 || tid == typeid(unsigned short)){
-            lua_Integer r = lua_tointeger(l,-1);
-            lua_pop(l,1);
-            auto ans = static_cast<T*>(static_cast<void *>(&r));
-            return *ans;
-        }else if(tid == typeid(std::string)){
-            const char * r = lua_tostring(l,-1);
-            lua_pop(l,1);
-            auto ans = static_cast<T*>(static_cast<void *>(&r));
-            return *ans;
-        }else if(tid == typeid(char *) || tid == typeid(const char *)){
-            const char * r = lua_tostring(l,-1);
-            lua_pop(l,1);
-            auto ans = static_cast<T*>(static_cast<void *>(&r));
-            return *ans;
-        }
-        return 0;
-    }
 
     template <typename ... Args,typename ... Params>
     std::tuple<int,Args...> State::call(std::string name,Params ... p){
@@ -100,6 +103,7 @@ namespace wLua{
 
     template <typename Clazz,typename ... Params>
     void State::register_class(const char *name) {
+        check(typeid(Clazz).name());
         lua_pushcfunction(l,[](lua_State * l) -> int{
             //先把参数取出来，后面的操作会导致堆栈变化
             std::tuple<Params...> luaRet;
@@ -123,8 +127,39 @@ namespace wLua{
         lua_settable(l, -3);
         lua_pushstring(l, "__index");
         lua_pushcfunction(l,[](lua_State * l)-> int{
-            return 0;
+            auto * oc = *(Clazz **)lua_topointer(l, 1);
+            auto filed = lua_tostring(l,2);
+            auto ret = lua_getglobal(l,STATE_KEY);
+            std::cout << "filed : " << filed << ", status : " << lua_gettop(l)<< std::endl;
+            std::cout<<"STATE_KEY : "<< luaL_typename(l,lua_type(l , ret))<< std::endl;
+            auto * state = *(State **)lua_topointer(l,-1);
+            std::cout << "state  : " << state->clazzes.size() << std::endl;
+            lua_CFunction func = state->clazzes[typeid(Clazz).name()].funcs[filed];
+            std::cout << "func  : " << func << std::endl;
+            if (func){
+                lua_pushcfunction(l, func);
+            }
+            return 1;
         });
         lua_settable(l,-3);
+    }
+
+    template <typename Sig>
+    void State::register_func(Sig sig,const char *name) {
+        using Clazz = typename get_<Sig>::T;
+        using FuncRetType = typename get_<Sig>::retType;
+        using ParamTp = typename get_<Sig>::ParamTp;
+        check(typeid(Clazz).name());
+        funcAddrs[typeid(Sig).name()] = (void *)sig;
+        clazzes[typeid(Clazz).name()].funcs[name] = [](lua_State * l)->int {
+            std::cout<<"func called: " << lua_gettop(l) << std::endl;
+            auto * oc = *(Clazz **)lua_topointer(l, 1);
+            ParamTp luaRet;
+            TupleTraversal<ParamTp>::traversal(luaRet, l);
+            lua_getglobal(l,STATE_KEY);
+            auto state = *(State **)lua_topointer(l,-1);
+            auto func = (Sig&)state->funcAddrs[typeid(Sig).name()];
+            return PushAndReturn<ParamTp,Sig,Clazz,FuncRetType>::pushAndRet(luaRet, oc, func, state);
+        };
     }
 }
