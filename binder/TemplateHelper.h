@@ -20,8 +20,10 @@ namespace wLua{
     template<typename R,typename... Args>
     struct get_<R(*)(Args...)> {
         static size_t const value = sizeof...(Args);
-        using func = R(*)(Args...);
+        using Func = R(*)(Args...);
         typedef R retType;
+        using T = get_;
+        using ParamTp = std::tuple<Args...>;
     };
 
     template<typename Clazz,typename R,typename... Args>
@@ -91,5 +93,24 @@ namespace wLua{
     Clazz * createClazzWithTuple(Tuple& tp){
         return __createClazzWithTuple<Clazz>(tp,typename Indexes<std::tuple_size<Tuple>::value>::__type());
     }
+
+    template <typename Tuple,size_t N = std::tuple_size<Tuple>::value>
+    class LogTuple{
+    public:
+        static void traversal(Tuple& tuple){
+            using type = typename std::tuple_element<N - 1, Tuple>::type;
+            std::cout<<"Tuple("<<N-1<<") :" << std::get<N-1>(tuple) << std::endl;
+            LogTuple<Tuple, N - 1>::traversal(tuple);
+        }
+    };
+
+    template <typename Tuple>
+    class LogTuple<Tuple,1>{
+    public:
+        static void traversal(Tuple& tuple){
+            using type = typename std::tuple_element<0, Tuple>::type;
+            std::cout<<"Tuple("<<0<<") :" << std::get<0>(tuple) << std::endl;
+        }
+    };
 
 }

@@ -7,26 +7,6 @@
 
 using namespace wLua;
 
-template <typename Tuple,size_t N = std::tuple_size<Tuple>::value>
-class LogTuple{
-public:
-    static void traversal(Tuple& tuple){
-        using type = typename std::tuple_element<N - 1, Tuple>::type;
-        std::cout<<"Tuple("<<N-1<<") :" << std::get<N-1>(tuple) << std::endl;
-        LogTuple<Tuple, N - 1>::traversal(tuple);
-    }
-};
-
-template <typename Tuple>
-class LogTuple<Tuple,1>{
-public:
-    static void traversal(Tuple& tuple){
-        using type = typename std::tuple_element<0, Tuple>::type;
-        std::cout<<"Tuple("<<0<<") :" << std::get<0>(tuple) << std::endl;
-    }
-};
-
-
 class TestParam{
 private:
     std::string name;
@@ -52,7 +32,7 @@ public:
     }
 
     void changeName(int name){
-        nameInt = name;
+        this->nameInt = name;
     }
 
     void changeNameByStr(std::string name){
@@ -116,10 +96,10 @@ int main() {
 //    LogTuple<decltype(ret)>::traversal(ret);
     state->register_class<TestParam,const char *, int>("TestParam");
     state->register_func(&TestParam::add,"add");
-    state->register_func<void(TestParam::*)(const char * c)>(&TestParam::changeName,"changeName");
-    state->register_func<void(TestParam::*)(int)>(&TestParam::changeName,"changeName");
+    state->register_func<void(TestParam::*)(int)>(&TestParam::changeName,"changeNameInt");
     state->register_func(&TestParam::changeNameByStr,"changeNameByStr");
     state->register_func(&TestParam::sayHello,"sayHello");
+    state->register_func<void(TestParam::*)(const char * c)>(&TestParam::changeName,"changeName");
     // key offset is : &((TestParam*)0)->key
     // name offset is : &((TestParam*)0)->name
 //    state->register_func(test_func,"test_func");

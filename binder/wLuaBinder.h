@@ -74,12 +74,14 @@ namespace wLua {
             static void traversal(Tuple& tuple,int ret,void * data){
                 using type = typename std::tuple_element<N - 1, Tuple>::type;
                 std::get<N-1>(tuple) = LuaPop<type,Tuple>::pop(tuple, N-1, data);
+//                std::cout<<"Tuple("<<N-1<<") :" << std::get<N-1>(tuple) << std::endl;
                 TupleTraversal<Tuple, N - 1>::traversal(tuple, ret, data);
             }
 
             static void traversal(Tuple& tuple,void * data){
                 using type = typename std::tuple_element<N - 1, Tuple>::type;
                 std::get<N-1>(tuple) =  LuaPop<type,Tuple>::pop(tuple, N-1, data);
+//                std::cout<<"Tuple("<<0<<") :" << std::get<0>(tuple) << std::endl;
                 TupleTraversal<Tuple , N - 1>::traversal(tuple, data);
             }
         };

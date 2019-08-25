@@ -38,10 +38,29 @@ namespace wLua{
             chk(eLL_debug, luaopen_debug);
             chk(eLL_utf8, luaopen_utf8);
         }
+
+        std::cout << "start lua test --------" << std::endl;
+        lua_pushstring(l, "Hello , First");
+        lua_setglobal(l, "KEY_V");
+        lua_pushstring(l, "Hello, Second");
+        lua_pushstring(l, "Hello, Third");
+        lua_getglobal(l, "KEY_V");
+        std::cout << "Print 0: " << lua_tostring(l, -1) << std::endl;
+        lua_pop(l,1);
+        lua_pushstring(l, "Hello, Forth");
+        lua_pushstring(l, "Hello, Five");
+
+        for (int i = 1; i <= lua_gettop(l); ++i) {
+            std::cout << "Print 1: " << lua_tostring(l, i) << std::endl;
+        }
+        std::cout << "end lua test --------" << std::endl;
+
+
+
+
         auto ** pData = (State**)lua_newuserdata(l, sizeof(State*));
         *pData = this;
         lua_setglobal(l,STATE_KEY);
-        lua_pop(l,1);
     }
 
     State::~State() {
