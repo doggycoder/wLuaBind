@@ -162,4 +162,8 @@ namespace wLua{
             return PushAndReturn<ParamTp,Sig,Clazz,FuncRetType>::pushAndRet(luaRet, oc, func, state);
         };
     }
+
+    template <typename Clazz>
+    void State::register_field(const char *name) {
+    }
 }

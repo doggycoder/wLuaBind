@@ -120,6 +120,8 @@ int main() {
     state->register_func<void(TestParam::*)(int)>(&TestParam::changeName,"changeName");
     state->register_func(&TestParam::changeNameByStr,"changeNameByStr");
     state->register_func(&TestParam::sayHello,"sayHello");
+    // key offset is : &((TestParam*)0)->key
+    // name offset is : &((TestParam*)0)->name
 //    state->register_func(test_func,"test_func");
     state->dofile("../res/test4.lua");
 

@@ -148,6 +148,9 @@ namespace wLua {
         template <typename Sig>
         void register_func(Sig,const char * name = nullptr);
 
+        template <typename Clazz>
+        void register_field(const char *name);
+
     };
 
 };
