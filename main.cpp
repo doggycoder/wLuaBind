@@ -102,10 +102,11 @@ int main() {
     state->register_func<void(TestParam::*)(const char * c)>(&TestParam::changeName,"changeName");
     // key offset is : &((TestParam*)0)->key
     // name offset is : &((TestParam*)0)->name
-//    state->register_func(test_func,"test_func");
+    //非成员函数注册
+    state->register_func(test_func,"test_func");
     state->dofile("../res/test4.lua");
 
-    //下一步去实现重载函数的同名注册，以及非成员函数的注册。还有成员数据的注册
+    //下一步去实现重载函数的同名注册。还有成员数据的注册
     //通过lua_gettop判断有多少个参数及参数的基本类型，去调用不同的构造函数
 
     delete state;

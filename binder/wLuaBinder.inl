@@ -156,13 +156,16 @@ namespace wLua{
             auto state = *(State **)lua_topointer(l,-1);
             lua_pop(l,1) ;
             auto func = (Sig&)state->funcAddrs[typeid(Sig).name()];
-
-            auto * oc = *(Clazz **)lua_topointer(l, 1);
+            auto oc = typeid(Clazz) == typeid(void) ? nullptr : *(Clazz **)lua_topointer(l, 1);
             ParamTp luaRet;
             TupleTraversal<ParamTp>::traversal(luaRet, l);
             std::cout<< typeid(Clazz).name() << "-" << typeid(Sig).name() << ", oc = " << oc << std::endl;
             return PushAndReturn<ParamTp,Sig,Clazz,FuncRetType>::pushAndRet(luaRet, oc, func, state);
         };
+        if(typeid(Clazz) == typeid(void)){
+            lua_pushcfunction(l, clazzes[typeid(Clazz).name()].funcs[name]);
+            lua_setglobal(l, name);
+        }
     }
 
     template <typename Clazz>

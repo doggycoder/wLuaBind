@@ -22,7 +22,7 @@ namespace wLua{
         static size_t const value = sizeof...(Args);
         using Func = R(*)(Args...);
         typedef R retType;
-        using T = get_;
+        using T = void;
         using ParamTp = std::tuple<Args...>;
     };
 
@@ -76,6 +76,12 @@ namespace wLua{
     typename get_<Func>::retType __callFuncWithTupleParam(Tuple tp,IndexTuple< _Ind... >,Func func, Clazz *clazz)
     {
         return (clazz->*func)(std::get< _Ind >(tp)...);
+    }
+
+    template<typename Tuple,typename Func, size_t... _Ind>
+    typename get_<Func>::retType __callFuncWithTupleParam(Tuple tp,IndexTuple< _Ind... >,Func func, void *clazz)
+    {
+        return func(std::get< _Ind >(tp)...);
     }
 
     template<typename Tuple,typename Func,typename Clazz>

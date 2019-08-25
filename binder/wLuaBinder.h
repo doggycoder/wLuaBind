@@ -130,6 +130,26 @@ namespace wLua {
             }
         };
 
+        template<typename Tuple,typename R, typename ... Args>
+        class PushAndReturn<Tuple,R(*)(Args...),void,R>{
+        public:
+            static int pushAndRet(Tuple tp, void *clazz, R(*func)(Args...),State * state){
+                R ret = callFuncWithTupleParam(tp,func);
+                state->push(ret);
+                return 1;
+            }
+        };
+
+
+        template<typename Tuple, typename ... Args>
+        class PushAndReturn<Tuple,void(*)(Args...),void,void>{
+        public:
+            static int pushAndRet(Tuple tp, void *clazz,void (*func)(Args...),State * state){
+                callFuncWithTupleParam(tp,func);
+                return 0;
+            }
+        };
+
     public:
         static State * create(LuaLib type = eLL_all);
 

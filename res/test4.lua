@@ -15,4 +15,5 @@ tp2:changeName("Tp2__")
 print("test 4 sayHello :", tp:sayHello())
 print("test 4 .lua exec finished")
 print("test_func : " + test_func(12,25, 123))
+print("test_func finish")
 
