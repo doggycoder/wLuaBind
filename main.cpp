@@ -30,6 +30,7 @@ public:
 class TestParam{
 private:
     std::string name;
+    int nameInt{0};
 public:
     TestParam(const char * hello, int pos){
         std::cout<<hello<<":" << pos <<std::endl;
@@ -43,11 +44,15 @@ public:
     }
 
     std::string sayHello(){
-        return "Hello, "+ name +" , I am C++";
+        return "Hello, "+ name +" , I am C++ . IntName = " + std::to_string(nameInt);
     }
 
     void changeName(const char * name){
         this->name = name;
+    }
+
+    void changeName(int name){
+        nameInt = name;
     }
 
     void changeNameByStr(std::string name){
@@ -111,10 +116,15 @@ int main() {
 //    LogTuple<decltype(ret)>::traversal(ret);
     state->register_class<TestParam,const char *, int>("TestParam");
     state->register_func(&TestParam::add,"add");
-    state->register_func(&TestParam::changeName,"changeName");
+    state->register_func<void(TestParam::*)(const char * c)>(&TestParam::changeName,"changeName");
+    state->register_func<void(TestParam::*)(int)>(&TestParam::changeName,"changeName");
     state->register_func(&TestParam::changeNameByStr,"changeNameByStr");
     state->register_func(&TestParam::sayHello,"sayHello");
+//    state->register_func(test_func,"test_func");
     state->dofile("../res/test4.lua");
+
+    //下一步去实现重载函数的同名注册，以及非成员函数的注册。还有成员数据的注册
+    //通过lua_gettop判断有多少个参数及参数的基本类型，去调用不同的构造函数
 
     delete state;
 
