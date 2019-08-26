@@ -137,6 +137,11 @@ namespace wLua{
             std::cout << typeid(Clazz).name() << "::"<< filed << ", oc = " << oc << std::endl;
             if (func){
                 lua_pushcfunction(l, func);
+            }else{
+                auto fAddr = state->clazzes[typeid(Clazz).name()].fileds[filed];
+                if(fAddr){
+                    fAddr(state, (void *)oc, filed);
+                }
             }
             return 1;
         });
@@ -150,12 +155,12 @@ namespace wLua{
         using ParamTp = typename get_<Sig>::ParamTp;
         check(typeid(Clazz).name());
         std::cout<< "register func:" <<typeid(Clazz).name() <<"::" << typeid(Sig).name() << ", Name = " << name << std::endl;
-        funcAddrs[typeid(Sig).name()] = *(void **)(&sig);
+        clazzes[typeid(Clazz).name()].funcAddrs[typeid(Sig).name()] = *(void **)(&sig);
         clazzes[typeid(Clazz).name()].funcs[name] = [](lua_State * l)->int {
             lua_getglobal(l,STATE_KEY);
             auto state = *(State **)lua_topointer(l,-1);
             lua_pop(l,1) ;
-            auto func = (Sig&)state->funcAddrs[typeid(Sig).name()];
+            auto func = (Sig&)state->clazzes[typeid(Clazz).name()].funcAddrs[typeid(Sig).name()];
             auto oc = typeid(Clazz) == typeid(void) ? nullptr : *(Clazz **)lua_topointer(l, 1);
             ParamTp luaRet;
             TupleTraversal<ParamTp>::traversal(luaRet, l);
@@ -168,7 +173,14 @@ namespace wLua{
         }
     }
 
-    template <typename Clazz>
-    void State::register_field(const char *name) {
+    template <typename Clazz,typename Type>
+    void State::register_field(Type (Clazz::*filed),const char *name) {
+        using Sig = Type(Clazz::*);
+        check(typeid(Clazz).name());
+        clazzes[typeid(Clazz).name()].filedAddrs[name] = *(void **)&filed;
+        clazzes[typeid(Clazz).name()].fileds[name] = [](State * state,void * clazz, const char * name){
+            auto ar = state->clazzes[typeid(Clazz).name()].filedAddrs[name];
+            state->push((Clazz *)clazz->**(Sig*)&ar);
+        };
     }
 }

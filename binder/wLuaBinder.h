@@ -14,6 +14,7 @@
 class lua_State;
 
 namespace wLua {
+    class State;
 
     enum LuaLib{
         eLL_base = 0x01,
@@ -31,7 +32,10 @@ namespace wLua {
     };
 
     struct RegClazz{
+        std::map<const char *,void *> funcAddrs;
         std::map<std::string,lua_CFunction> funcs;
+        std::map<std::string,void *> filedAddrs;
+        std::map<std::string,std::function<void(State * state,void * clazz, const char * name)>> fileds;
     };
 
 
@@ -51,7 +55,6 @@ namespace wLua {
     private:
         lua_State * l;
         std::map<const char *,RegClazz> clazzes;
-        std::map<const char *,void *> funcAddrs;
         static const char * STATE_KEY;
 
         explicit State(LuaLib type);
@@ -170,8 +173,8 @@ namespace wLua {
         template <typename Sig>
         void register_func(Sig,const char * name = nullptr);
 
-        template <typename Clazz>
-        void register_field(const char *name);
+        template <typename Clazz,typename Type>
+        void register_field(Type (Clazz::*filed),const char *name);
 
     };
 
