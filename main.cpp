@@ -9,9 +9,15 @@ using namespace wLua;
 
 class TestParam{
 public:
-    std::string name;
     int nameInt{0};
     int valueInt{123};
+    float dataFloat{123.221f};
+    double dataDouble{283.134};
+
+    int dataNumArray[5] = {
+            1,2,3,4,5
+    };
+    std::string name = "Hello Name";
 public:
     TestParam(const char * hello, int pos){
         std::cout<<hello<<":" << pos <<std::endl;
@@ -103,6 +109,10 @@ int main() {
     state->register_func<void(TestParam::*)(const char * c)>(&TestParam::changeName,"changeName");
     state->register_field(&TestParam::nameInt,"nameInt");
     state->register_field(&TestParam::valueInt,"valueInt");
+    state->register_field(&TestParam::dataFloat,"dataFloat");
+    state->register_field(&TestParam::dataDouble,"dataDouble");
+    state->register_field(&TestParam::name,"name");
+    state->register_field(&TestParam::dataNumArray,"dataNumArray");
     // key offset is : &((TestParam*)0)->key
     // name offset is : &((TestParam*)0)->name
     //非成员函数注册

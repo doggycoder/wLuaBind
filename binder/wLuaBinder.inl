@@ -73,7 +73,7 @@ namespace wLua{
                  || tid == typeid(short)
                  || tid == typeid(unsigned short)){
             lua_Integer ans = 0;
-            memcpy(&ans, (void *)&t, sizeof(t));
+            memcpy(&ans, (void *)&t, sizeof(T));
             lua_pushinteger(l, ans);
             std::cout << "push integer" << t << "," << ans << std::endl;
         }else{
@@ -133,16 +133,23 @@ namespace wLua{
             std::cout<<"STATE_KEY : "<< luaL_typename(l,lua_type(l , ret))<< std::endl;
             auto * state = *(State **)lua_topointer(l,-1);
             lua_pop(l,1) ;
-            lua_CFunction func = state->clazzes[typeid(Clazz).name()].funcs[filed];
-            std::cout << typeid(Clazz).name() << "::"<< filed << ", oc = " << oc << std::endl;
-            if (func){
-                lua_pushcfunction(l, func);
-            }else{
-                auto fAddr = state->clazzes[typeid(Clazz).name()].fileds[filed];
-                if(fAddr){
-                    fAddr(state, (void *)oc, filed);
-                }
+
+            //如果是调用方法，把函数push进去执行
+            auto funMap = state->clazzes[typeid(Clazz).name()].funcs;
+            if(funMap.find(filed) != funMap.end()){
+                std::cout << typeid(Clazz).name() << "::"<< filed << ", oc = " << oc << std::endl;
+                lua_pushcfunction(l, state->clazzes[typeid(Clazz).name()].funcs[filed]);
+                return 1;
             }
+            //如果是调用字段，把字段push进去执行
+            std::cout<<"filed topSize : " << filed << ", top = "<< lua_gettop(l) << ", "
+                     << lua_type(l,1) <<"-" <<lua_type(l,2)<< std::endl;
+            auto filedMap = state->clazzes[typeid(Clazz).name()].fileds;
+            if(filedMap.find(filed) != filedMap.end()){
+                state->clazzes[typeid(Clazz).name()].fileds[filed](state, (void *)oc, 0);
+                return 1;
+            }
+            //如果是调用数组
             return 1;
         });
         lua_settable(l,-3);
@@ -177,10 +184,42 @@ namespace wLua{
     void State::register_field(Type (Clazz::*filed),const char *name) {
         using Sig = Type(Clazz::*);
         check(typeid(Clazz).name());
-        clazzes[typeid(Clazz).name()].filedAddrs[name] = *(void **)&filed;
-        clazzes[typeid(Clazz).name()].fileds[name] = [](State * state,void * clazz, const char * name){
-            auto ar = state->clazzes[typeid(Clazz).name()].filedAddrs[name];
+        std::cout<<"register_field Sig: " << typeid(Type(Clazz::*)).name() << std::endl;
+        clazzes[typeid(Clazz).name()].filedAddrs[typeid(Sig).name()] = *(void **)&filed;
+        clazzes[typeid(Clazz).name()].fileds[name] = [](State * state,void * clazz, int index){
+            auto ar = state->clazzes[typeid(Clazz).name()].filedAddrs[typeid(Sig).name()];
             state->push((Clazz *)clazz->**(Sig*)&ar);
+        };
+    }
+
+    template <size_t t,typename Clazz,typename Type>
+    void State::register_field(Type (Clazz::*filed)[t],const char *name) {
+        using Sig = Type (Clazz::*)[t];
+        check(typeid(Clazz).name());
+        std::cout<<"register_field array Sig: " << typeid(Sig).name() << std::endl;
+        clazzes[typeid(Clazz).name()].filedAddrs[typeid(Sig).name()] = *(void **)&filed;
+        clazzes[typeid(Clazz).name()].fileds[typeid(Sig).name()] = [](State * state,void * clazz, int index){
+            auto ar = state->clazzes[typeid(Clazz).name()].filedAddrs[typeid(Sig).name()];
+            if(index >= t || index < 0){
+                void * d = nullptr;
+                state->push(d);
+            }else{
+                auto d = ((Clazz *)clazz->**(Sig*)(&ar))[index];
+                state->push(d);
+            }
+        };
+        clazzes[typeid(Clazz).name()].funcs[name] = [](lua_State * l) -> int {
+            lua_getglobal(l,STATE_KEY);
+            auto state = *(State **)lua_topointer(l,-1);
+            lua_pop(l,1);
+            auto oc = typeid(Clazz) == typeid(void) ? nullptr : *(Clazz **)lua_topointer(l, 1);
+            lua_Integer index = lua_tointeger(l,2);
+            auto fAddr = state->clazzes[typeid(Clazz).name()].fileds[typeid(Sig).name()];
+            if(fAddr){
+                fAddr(state, oc, (int)index);
+                return 1;
+            }
+            return 0;
         };
     }
 }

@@ -35,7 +35,7 @@ namespace wLua {
         std::map<const char *,void *> funcAddrs;
         std::map<std::string,lua_CFunction> funcs;
         std::map<std::string,void *> filedAddrs;
-        std::map<std::string,std::function<void(State * state,void * clazz, const char * name)>> fileds;
+        std::map<std::string,std::function<void(State * state,void * clazz, int index)>> fileds;
     };
 
 
@@ -175,6 +175,9 @@ namespace wLua {
 
         template <typename Clazz,typename Type>
         void register_field(Type (Clazz::*filed),const char *name);
+
+        template <size_t t,typename Clazz,typename Type>
+        void register_field(Type (Clazz::*filed)[t],const char *name);
 
     };
 

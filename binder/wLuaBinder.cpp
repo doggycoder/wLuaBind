@@ -110,5 +110,13 @@ namespace wLua{
         lua_pushboolean(l, t);
     }
 
+    template<> void State::push(float &t) {
+        lua_pushnumber(l, t);
+    }
+
+    template<> void State::push(double &t) {
+        lua_pushnumber(l, t);
+    }
+
 
 }
