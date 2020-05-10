@@ -13,10 +13,6 @@ namespace wLua{
 
     const char * State::STATE_KEY = "__wLuaBinder__State__";
 
-    State* State::create(wLua::LuaLib type) {
-        return new State(type);
-    }
-
     State::State(LuaLib type) {
         l = luaL_newstate();
         if (type == eLL_all){
@@ -54,9 +50,6 @@ namespace wLua{
             std::cout << "Print 1: " << lua_tostring(l, i) << std::endl;
         }
         std::cout << "end lua test --------" << std::endl;
-
-
-
 
         auto ** pData = (State**)lua_newuserdata(l, sizeof(State*));
         *pData = this;

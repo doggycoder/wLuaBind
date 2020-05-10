@@ -22,6 +22,10 @@ public:
     TestParam(const char * hello, int pos){
         std::cout<<hello<<":" << pos <<std::endl;
     };
+
+    TestParam(){
+
+    }
 //    TestParam(double key){
 //        std::cout<<"create testParam : " << key <<std::endl;
 //    };
@@ -96,34 +100,29 @@ int main() {
     // 如何支持类的成员函数获取参数
 //    testCallFuncWithTupleParam();
 
-    wLua::State * state = wLua::State::create();
+    wLua::State state = wLua::State(wLua::eLL_all);
 
 //    state->dofile("../res/test3.lua");
 //    auto ret = state->call<char *,int,char*,bool>("sayHello","LiMing", 21, true, 10);
 //    LogTuple<decltype(ret)>::traversal(ret);
-    state->register_class<TestParam,const char *, int>("TestParam");
-    state->register_func(&TestParam::add,"add");
-    state->register_func<void(TestParam::*)(int)>(&TestParam::changeName,"changeNameInt");
-    state->register_func(&TestParam::changeNameByStr,"changeNameByStr");
-    state->register_func(&TestParam::sayHello,"sayHello");
-    state->register_func<void(TestParam::*)(const char * c)>(&TestParam::changeName,"changeName");
-    state->register_field(&TestParam::nameInt,"nameInt");
-    state->register_field(&TestParam::valueInt,"valueInt");
-    state->register_field(&TestParam::dataFloat,"dataFloat");
-    state->register_field(&TestParam::dataDouble,"dataDouble");
-    state->register_field(&TestParam::name,"name");
-    state->register_field(&TestParam::dataNumArray,"dataNumArray");
+    state.register_class<TestParam,const char *, int>("TestParam").register_func(&TestParam::add,"add")
+    .register_func<void(TestParam::*)(int)>(&TestParam::changeName,"changeNameInt")
+    .register_func(&TestParam::changeNameByStr,"changeNameByStr")
+   .register_func(&TestParam::sayHello,"sayHello")
+    .register_func<void(TestParam::*)(const char * c)>(&TestParam::changeName,"changeName")
+    .register_field(&TestParam::nameInt,"nameInt")
+    .register_field(&TestParam::valueInt,"valueInt")
+    .register_field(&TestParam::dataFloat,"dataFloat")
+    .register_field(&TestParam::dataDouble,"dataDouble")
+    .register_field(&TestParam::name,"name")
+    .register_field(&TestParam::dataNumArray,"dataNumArray")
     // key offset is : &((TestParam*)0)->key
     // name offset is : &((TestParam*)0)->name
     //非成员函数注册
-    state->register_func(test_func,"test_func");
-    state->dofile("../res/test4.lua");
+    .register_func(test_func,"test_func");
+    state.dofile("../res/test4.lua");
 
     //下一步去实现重载函数的同名注册。还有成员数据的注册
     //通过lua_gettop判断有多少个参数及参数的基本类型，去调用不同的构造函数
-
-    delete state;
-
-
     return 0;
 }

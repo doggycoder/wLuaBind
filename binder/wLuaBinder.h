@@ -57,8 +57,6 @@ namespace wLua {
         std::map<const char *,RegClazz> clazzes;
         static const char * STATE_KEY;
 
-        explicit State(LuaLib type);
-
         template <typename T,typename ... Params>
         void push(T& t,Params ... p);
 
@@ -154,7 +152,8 @@ namespace wLua {
         };
 
     public:
-        static State * create(LuaLib type = eLL_all);
+
+        explicit State(LuaLib type);
 
         ~State();
 
@@ -168,16 +167,16 @@ namespace wLua {
         std::tuple<int,Args...> call(std::string name,Params ... p);
 
         template <typename Clazz,typename ... Params>
-        void register_class(const char * name = nullptr);
+        State& register_class(const char * name = nullptr);
 
         template <typename Sig>
-        void register_func(Sig,const char * name = nullptr);
+        State& register_func(Sig,const char * name = nullptr);
 
         template <typename Clazz,typename Type>
-        void register_field(Type (Clazz::*filed),const char *name);
+        State& register_field(Type (Clazz::*filed),const char *name);
 
         template <size_t t,typename Clazz,typename Type>
-        void register_field(Type (Clazz::*filed)[t],const char *name);
+        State& register_field(Type (Clazz::*filed)[t],const char *name);
 
     };
 
